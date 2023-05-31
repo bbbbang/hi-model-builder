@@ -23,9 +23,6 @@ def node_link_callback(sender, app_data):
     print("node link : ", sender, app_data)
     _node_link_item = dpg.add_node_link(app_data[0], app_data[1], parent=sender)
 
-    sender_info = dpg.get_item_info(sender)
-    sender_info[f"{_node_link_item}"] = [app_data[0], app_data[1]]
-
     dpg.set_item_user_data(_node_link_item, (app_data[0], app_data[1]))
 
     prev_node = dpg.get_item_children(app_data[0])
@@ -41,33 +38,29 @@ def node_link_callback(sender, app_data):
             dpg.set_value(v[0], val)
             next_item = v[0]
 
-    dpg.configure_item(next_item, source=prev_item)
+    # dpg.configure_item(next_item, source=prev_item)
 
 def node_delink_callback(sender, app_data):
     print("node delink : ", sender, app_data)
 
     _prev, _next = dpg.get_item_user_data(app_data)
 
-    prev_node = dpg.get_item_children(_prev)
-    next_node = dpg.get_item_children(_next)
-
-    for k, v in next_node.items():
-        if len(v) > 0:
-            print("asdf", dpg.get_item_source(v[0]))
-            #dpg.configure_item(v[0], source=0)
-
     dpg.delete_item(app_data)
 
-    # prev_node = dpg.get_item_children(app_data[0])
-    # next_node = dpg.get_item_children(app_data[1])
+    # prev_node = dpg.get_item_children(_prev)
+    # next_node = dpg.get_item_children(_next)
 
     # for k, v in prev_node.items():
     #     if len(v) > 0:
     #         prev_item = v[0]
+    #         print("prev_item : ", dpg.get_item_source(v[0]))
+    #         dpg.set_item_source(v[0], v[0])
 
     # for k, v in next_node.items():
     #     if len(v) > 0:
-    #         next_item = v[0]
+    #         print("before : ", dpg.get_item_source(v[0]))
+    #         #dpg.configure_item(v[0], source=0)
+    #         print("after : ", dpg.get_item_source(v[0]))
 
 
 
@@ -84,7 +77,7 @@ def add_node(sender, data, user_data):
     node_count = user_data[node_type]
 
     if node_type == "input":
-        with dpg.node(label=f"input {node_count}", pos=[500, 10], parent=window_id, tag=f"input_{node_count}") as _new_node:
+        with dpg.node(label=f"input {node_count}", pos=[200, 10], parent=window_id, tag=f"input_{node_count}") as _new_node:
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
                 dpg.add_input_int(label="width", width=200)
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
@@ -93,7 +86,7 @@ def add_node(sender, data, user_data):
                 dpg.add_input_int(label="channel", width=200)
 
     elif node_type == "conv2d":
-        with dpg.node(label=f"conv2d {node_count}", pos=[500, 10], parent=window_id, tag=f"conv2d_{node_count}") as _new_node:
+        with dpg.node(label=f"conv2d {node_count}", pos=[300, 10], parent=window_id, tag=f"conv2d_{node_count}") as _new_node:
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Input):
                 dpg.add_input_int(label="in_channels", width=200)
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Output):
@@ -110,7 +103,7 @@ def add_node(sender, data, user_data):
                 dpg.add_input_int(label="groups", width=200, default_value=1)
 
     elif node_type == "batchnorm":
-        with dpg.node(label=f"batchnorm {node_count}", pos=[500, 10], parent=window_id, tag=f"batchnorm_{node_count}") as _new_node:
+        with dpg.node(label=f"batchnorm {node_count}", pos=[400, 10], parent=window_id, tag=f"batchnorm_{node_count}") as _new_node:
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Input):
                 bn_source = dpg.add_input_int(label="in_channels", width=200)
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Output):
@@ -122,6 +115,25 @@ def add_node(sender, data, user_data):
                 relu_source = dpg.add_input_int(label="in_channels", width=200)
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Output):
                 dpg.add_input_int(label="out_channels", width=200, source=relu_source, readonly=True)
+
+    elif node_type == "convbn":
+        with dpg.node(label=f"conv2d {node_count}", pos=[300, 10], parent=window_id, tag=f"conv2d_{node_count}") as _new_node:
+            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Input):
+                dpg.add_input_int(label="in_channels", width=200)
+            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Output):
+                dpg.add_input_int(label="out_channels", width=200)
+            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
+                dpg.add_input_int(label="kernel", width=200, default_value=1)
+            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
+                dpg.add_input_int(label="padding", width=200, default_value=0)
+            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
+                dpg.add_input_int(label="stride", width=200, default_value=1)
+            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
+                dpg.add_input_int(label="dilation", width=200, default_value=1)
+            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
+                dpg.add_input_int(label="groups", width=200, default_value=1)
+            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
+                dpg.add_combo(("None", "ReLU", "Leaky ReLU", "Swish", "Sigmoid"), width=200, default_value="None", label="Nonelinear")
 
     # with dpg.item_handler_registry(show=False, tag="__node_handler"):
     #     dpg.add_item_double_clicked_handler(0, callback=lambda s, a, u: print(f"clicked_handler: {s} '\t' {a} '\t' {u}"))
@@ -143,7 +155,7 @@ class ToolWindow:
 
         self.node_window_id = kwargs["node_window_id"]
 
-        self.node_count = dict(input=0, conv2d=0, batchnorm=0, relu=0)
+        self.node_count = dict(input=0, conv2d=0, batchnorm=0, relu=0, convbn=0)
 
         self.setup()
 
@@ -162,6 +174,7 @@ class ToolWindow:
                 dpg.add_button(label="Add Conv2d", callback=add_node, user_data=dict(id=self.node_window_id, type="conv2d", **self.node_count))
                 dpg.add_button(label="Add Batchnorm", callback=add_node, user_data=dict(id=self.node_window_id, type="batchnorm", **self.node_count))
                 dpg.add_button(label="Add ReLU", callback=add_node, user_data=dict(id=self.node_window_id, type="relu", **self.node_count))
+                dpg.add_button(label="Add ConvBN", callback=add_node, user_data=dict(id=self.node_window_id, type="convbn", **self.node_count))
 
     def __call__(self):
         pass
